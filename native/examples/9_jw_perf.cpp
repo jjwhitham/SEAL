@@ -143,7 +143,10 @@ void jw_perf()
     print_parameters(context);
 
     // Key generation
+    uint64_t start = GetTimeStamp();
     KeyGenerator keygen(context);
+    uint64_t end = GetTimeStamp();
+    cout << "\n\n\nHello hello! Keygen took: " << end - start << " microseconds\n\n\n";
     SecretKey secret_key = keygen.secret_key();
     PublicKey public_key;
     keygen.create_public_key(public_key);
