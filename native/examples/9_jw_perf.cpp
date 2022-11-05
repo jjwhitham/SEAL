@@ -23,15 +23,8 @@ inline timeval get_timeval() {
 
 // Return current wallclock time, for performance measurement
 inline uint64_t get_elapsed_time(timeval tv1, timeval tv2) {
-    cout << "tv1.tv_sec: " << tv1.tv_sec << endl;
-    cout << "tv2.tv_sec: " << tv2.tv_sec << endl;
-    cout << "tv1.tv_usec: " << tv1.tv_usec << endl;
-    cout << "tv2.tv_usec: " << tv2.tv_usec << endl;
-
     uint64_t time1 = tv1.tv_sec * (uint64_t)1000000 + tv1.tv_usec;
     uint64_t time2 = tv2.tv_sec * (uint64_t)1000000 + tv2.tv_usec;
-    cout << "time1: " << time1 << endl;
-    cout << "time2: " << time2 << endl;
     return (time2 - time1);
 }
 
@@ -165,12 +158,9 @@ void jw_perf()
 
     // Key generation
     uint64_t start = GetTimeStamp();
-    timeval tv1 = get_timeval();
     KeyGenerator keygen(context);
     uint64_t end = GetTimeStamp();
-    timeval tv2 = get_timeval();
     cout << "\n\n\nHello hello! Keygen took: " << end - start << " microseconds\n\n\n";
-    cout << "\n\n\nHello hello! Public Keygen took: " << get_elapsed_time(tv1, tv2) << " microseconds\n\n\n";
     SecretKey secret_key = keygen.secret_key();
     PublicKey public_key;
     keygen.create_public_key(public_key);
@@ -181,86 +171,25 @@ void jw_perf()
     Decryptor decryptor(context, secret_key);
 
     // Example
-    uint64_t x = 6;
+    uint64_t x = nums_for_multiplication[0][0];
+    uint64_t y = nums_for_multiplication[0][1];
+
+    timeval tv1 = get_timeval();
+    uint64_t xy = x * y;
+    timeval tv2 = get_timeval();
+    cout << "\n\n\nPlaintext multiplication took: " << get_elapsed_time(tv1, tv2) << " microseconds\n\n\n";
+
     Plaintext x_plain(uint64_to_hex_string(x));
-    Ciphertext x_encrypted;
+    Plaintext y_plain(uint64_to_hex_string(y));
+    Ciphertext x_encrypted, y_encrypted, xy_encrypted;
     encryptor.encrypt(x_plain, x_encrypted);
-    Plaintext x_decrypted;
-    decryptor.decrypt(x_encrypted, x_decrypted);
-
-    Ciphertext x_sq_plus_one;
-    evaluator.square(x_encrypted, x_sq_plus_one);
-    Plaintext plain_one("1");
-    evaluator.add_plain_inplace(x_sq_plus_one, plain_one);
-    Plaintext decrypted_result;
-    decryptor.decrypt(x_sq_plus_one, decrypted_result);
-
-    Ciphertext x_plus_one_sq;
-    evaluator.add_plain(x_encrypted, plain_one, x_plus_one_sq);
-    evaluator.square_inplace(x_plus_one_sq);
-    decryptor.decrypt(x_plus_one_sq, decrypted_result);
-    Ciphertext encrypted_result;
-    Plaintext plain_four("4");
-    evaluator.multiply_plain_inplace(x_sq_plus_one, plain_four);
-    evaluator.multiply(x_sq_plus_one, x_plus_one_sq, encrypted_result);
-
-    // KeyGenerator keygen(context);
-    // SecretKey secret_key = keygen.secret_key();
-    // PublicKey public_key;
-    // keygen.create_public_key(public_key);
-
-    // Encryptor encryptor(context, public_key);
-    // Evaluator evaluator(context);
-    // Decryptor decryptor(context, secret_key);
-
-    // uint64_t x = 6;
-    // Plaintext x_plain(uint64_to_hex_string(x));
-    // Ciphertext x_encrypted;
-    // encryptor.encrypt(x_plain, x_encrypted);
-    // Plaintext x_decrypted;
-    // decryptor.decrypt(x_encrypted, x_decrypted);
-
-    // Ciphertext x_sq_plus_one;
-    // evaluator.square(x_encrypted, x_sq_plus_one);
-    // Plaintext plain_one("1");
-    // evaluator.add_plain_inplace(x_sq_plus_one, plain_one);
-    // Plaintext decrypted_result;
-    // decryptor.decrypt(x_sq_plus_one, decrypted_result);
-
-    // Ciphertext x_plus_one_sq;
-    // evaluator.add_plain(x_encrypted, plain_one, x_plus_one_sq);
-    // evaluator.square_inplace(x_plus_one_sq);
-    // decryptor.decrypt(x_plus_one_sq, decrypted_result);
-    // Ciphertext encrypted_result;
-    // Plaintext plain_four("4");
-    // evaluator.multiply_plain_inplace(x_sq_plus_one, plain_four);
-    // evaluator.multiply(x_sq_plus_one, x_plus_one_sq, encrypted_result);
-
-    // // A better way
-    // RelinKeys relin_keys;
-    // keygen.create_relin_keys(relin_keys);
-
-    // Ciphertext x_squared;
-    // evaluator.square(x_encrypted, x_squared);
-
-    // evaluator.relinearize_inplace(x_squared, relin_keys);
-    // evaluator.add_plain(x_squared, plain_one, x_sq_plus_one);
-    // decryptor.decrypt(x_sq_plus_one, decrypted_result);
-
-    // Ciphertext x_plus_one;
-
-    // evaluator.add_plain(x_encrypted, plain_one, x_plus_one);
-    // evaluator.square(x_plus_one, x_plus_one_sq);
-    // evaluator.relinearize_inplace(x_plus_one_sq, relin_keys);
-    // decryptor.decrypt(x_plus_one_sq, decrypted_result);
-
-    // evaluator.multiply_plain_inplace(x_sq_plus_one, plain_four);
-    // evaluator.multiply(x_sq_plus_one, x_plus_one_sq, encrypted_result);
-    // evaluator.relinearize_inplace(encrypted_result, relin_keys);
-
-    // decryptor.decrypt(encrypted_result, decrypted_result);
-
-    // parms.set_poly_modulus_degree(2048);
-    // context = SEALContext(parms);
-    // print_parameters(context);
+    encryptor.encrypt(y_plain, y_encrypted);
+    Plaintext xy_decrypted;
+    // cout << "x: " << x << ", x_decrypted: " << x_decrypted.to_string() << '\n';
+    timeval tv3 = get_timeval();
+    evaluator.multiply(x_encrypted, y_encrypted, xy_encrypted);
+    timeval tv4 = get_timeval();
+    cout << "\n\nEncrypted multiplication took: " << get_elapsed_time(tv3, tv4) << " microseconds\n\n\n";
+    decryptor.decrypt(xy_encrypted, xy_decrypted);
+    cout << "xy_decrypted: " << xy_decrypted.to_string() << ", xy_decrypted: " << xy_decrypted.to_string() << '\n';
 }
