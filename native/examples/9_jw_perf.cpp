@@ -14,6 +14,27 @@ inline uint64_t GetTimeStamp() {
     return tv.tv_sec * (uint64_t)1000000 + tv.tv_usec;
 }
 
+// Return current timeval, for performance measurement
+inline timeval get_timeval() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv;
+}
+
+// Return current wallclock time, for performance measurement
+inline uint64_t get_elapsed_time(timeval tv1, timeval tv2) {
+    cout << "tv1.tv_sec: " << tv1.tv_sec << endl;
+    cout << "tv2.tv_sec: " << tv2.tv_sec << endl;
+    cout << "tv1.tv_usec: " << tv1.tv_usec << endl;
+    cout << "tv2.tv_usec: " << tv2.tv_usec << endl;
+
+    uint64_t time1 = tv1.tv_sec * (uint64_t)1000000 + tv1.tv_usec;
+    uint64_t time2 = tv2.tv_sec * (uint64_t)1000000 + tv2.tv_usec;
+    cout << "time1: " << time1 << endl;
+    cout << "time2: " << time2 << endl;
+    return (time2 - time1);
+}
+
 void jw_perf()
 {
     // [(random.randint(10, 99), random.randint(10, 99)) for i in range(1000)]
@@ -144,9 +165,12 @@ void jw_perf()
 
     // Key generation
     uint64_t start = GetTimeStamp();
+    timeval tv1 = get_timeval();
     KeyGenerator keygen(context);
     uint64_t end = GetTimeStamp();
+    timeval tv2 = get_timeval();
     cout << "\n\n\nHello hello! Keygen took: " << end - start << " microseconds\n\n\n";
+    cout << "\n\n\nHello hello! Public Keygen took: " << get_elapsed_time(tv1, tv2) << " microseconds\n\n\n";
     SecretKey secret_key = keygen.secret_key();
     PublicKey public_key;
     keygen.create_public_key(public_key);
