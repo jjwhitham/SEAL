@@ -131,8 +131,9 @@ void jw_perf()
         { 57, 29 }, { 89, 57 }, { 25, 63 }, { 18, 14 }, { 43, 21 }, { 56, 27 }, { 26, 39 }, { 68, 20 }, { 72, 91 },
         { 41, 26 }
     };
-    cout << "nums_for_multiplication[0]: " << nums_for_multiplication[0] << endl << endl;
+    int nums_size = (sizeof nums_for_multiplication) / (sizeof nums_for_multiplication[0]);
 
+    // Setup context with parameters
     EncryptionParameters parms(scheme_type::bfv);
     size_t poly_modulus_degree = 4096;
     parms.set_poly_modulus_degree(poly_modulus_degree);
@@ -141,15 +142,18 @@ void jw_perf()
     SEALContext context(parms);
     print_parameters(context);
 
+    // Key generation
     KeyGenerator keygen(context);
     SecretKey secret_key = keygen.secret_key();
     PublicKey public_key;
     keygen.create_public_key(public_key);
 
+    // Operation instances
     Encryptor encryptor(context, public_key);
     Evaluator evaluator(context);
     Decryptor decryptor(context, secret_key);
 
+    // Example
     uint64_t x = 6;
     Plaintext x_plain(uint64_to_hex_string(x));
     Ciphertext x_encrypted;
