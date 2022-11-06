@@ -7,29 +7,9 @@
 using namespace std;
 using namespace seal;
 
-// Return current wallclock time, for performance measurement
-inline uint64_t GetTimeStamp() {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return tv.tv_sec * (uint64_t)1000000 + tv.tv_usec;
-}
-
-// Return current timeval, for performance measurement
-inline timeval get_timeval() {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return tv;
-}
-
-// Return current wallclock time, for performance measurement
-inline uint64_t get_elapsed_time(timeval tv1, timeval tv2) {
-    uint64_t time1 = tv1.tv_sec * (uint64_t)1000000 + tv1.tv_usec;
-    uint64_t time2 = tv2.tv_sec * (uint64_t)1000000 + tv2.tv_usec;
-    return (time2 - time1);
-}
-
 void jw_perf()
 {
+    // TODO Read these from file
     // [(random.randint(10, 99), random.randint(10, 99)) for i in range(1000)]
     int nums_for_multiplication[][2] = {
         { 25, 15 }, { 51, 38 }, { 18, 13 }, { 99, 31 }, { 88, 59 }, { 53, 31 }, { 85, 87 }, { 65, 89 }, { 62, 55 },
@@ -157,15 +137,18 @@ void jw_perf()
     print_parameters(context);
 
     // Key generation
-    uint64_t start = GetTimeStamp();
+    chrono::high_resolution_clock::time_point time_start, time_end;
+    chrono::nanoseconds time_diff;
+    time_start = chrono::high_resolution_clock::now();
     KeyGenerator keygen(context);
-    uint64_t end = GetTimeStamp();
-    cout << "\n\n\nHello hello! Keygen took: " << end - start << " microseconds\n\n\n";
+    time_end = chrono::high_resolution_clock::now();
+    time_diff = time_end - time_start;
+    cout << "\n\n\nHello hello! Keygen took: " << time_diff.count() << " nanoseconds (with chrono)\n\n\n";
     SecretKey secret_key = keygen.secret_key();
     PublicKey public_key;
     keygen.create_public_key(public_key);
 
-    // Operation instances
+    // Operator instances
     Encryptor encryptor(context, public_key);
     Evaluator evaluator(context);
     Decryptor decryptor(context, secret_key);
@@ -173,23 +156,13 @@ void jw_perf()
     // Example
     uint64_t x = nums_for_multiplication[0][0];
     uint64_t y = nums_for_multiplication[0][1];
-
-    timeval tv1 = get_timeval();
     uint64_t xy = x * y;
-    timeval tv2 = get_timeval();
-    cout << "\n\n\nPlaintext multiplication took: " << get_elapsed_time(tv1, tv2) << " microseconds\n\n\n";
-
     Plaintext x_plain(uint64_to_hex_string(x));
     Plaintext y_plain(uint64_to_hex_string(y));
     Ciphertext x_encrypted, y_encrypted, xy_encrypted;
     encryptor.encrypt(x_plain, x_encrypted);
     encryptor.encrypt(y_plain, y_encrypted);
     Plaintext xy_decrypted;
-    // cout << "x: " << x << ", x_decrypted: " << x_decrypted.to_string() << '\n';
-    timeval tv3 = get_timeval();
     evaluator.multiply(x_encrypted, y_encrypted, xy_encrypted);
-    timeval tv4 = get_timeval();
-    cout << "\n\nEncrypted multiplication took: " << get_elapsed_time(tv3, tv4) << " microseconds\n\n\n";
     decryptor.decrypt(xy_encrypted, xy_decrypted);
-    cout << "xy_decrypted: " << xy_decrypted.to_string() << ", xy_decrypted: " << xy_decrypted.to_string() << '\n';
 }
